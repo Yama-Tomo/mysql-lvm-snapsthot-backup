@@ -1,0 +1,41 @@
+#!/bin/bash
+
+. `cd $(dirname $0); pwd`/../libs/commonrc
+
+logger "INFO" "Fullbackup start" $LOG
+mysql -h$MYSQL_HOST -u$MYSQL_USER -p$MYSQL_PASSWORD -e "FLUSH TABLES WITH READ LOCK; FLUSH LOGS; system /bin/bash $SCRIPT_HOME/bin/create_lvm_snaphot $SNAPSHOT_SIZE $SNAPSHOT_NAME $SNAPSHOT_FROM; UNLOCK TABLES;"
+
+# does not snapshot :(
+if [ $(lvscan | grep -c $SNAPSHOT_NAME) -eq 0 ]; then
+  logger "ERROR" "Faild create lvm snapshot" $LOG
+  exit 2
+fi
+
+mount $SNAPSHOT_TO $MNT
+
+logger "INFO" "Create tar file start" $LOG
+cd $BACKUP_TARGET
+tar zcf $OUTPUT_BACKUP_PATH/$(hostname)-$(date '+%Y%m%d').tar.gz *
+logger "INFO" "Create tar file done" $LOG
+
+# optimize table per monthly
+if [ "$(date '+%d')" = "15" ]; then
+  logger "INFO" "Optimize table start" $LOG
+  output=$(mysqlcheck -h$MYSQL_HOST -u$MYSQL_USER -p$MYSQL_PASSWORD --auto-repair --optimize --all-databases 2>&1)
+  logger "INFO" "$output" $LOG
+  logger "INFO" "Optimize table done" $LOG
+fi
+
+cd /
+umount $MNT
+output=$(lvremove -f $SNAPSHOT_TO 2>&1)
+result=$?
+
+if [ $result -ne 0 ]; then
+  echo $output 1>&2
+  exit 3
+fi
+
+logger "INFO" "Fullbackup done" $LOG
+
+exit 0

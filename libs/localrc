@@ -1,0 +1,26 @@
+#!/bin/bash
+
+# !!!!!!!!!!!!!!!!!!!!!!! CAUTION !!!!!!!!!!!!!!!!!!!!!!!
+# このファイルはパスワード等が記載されている為ファイルの権限に注意してください
+
+if [ "$(basename $0)" = 'fullbackup' ]; then
+  MYSQL_USER="root"
+  MYSQL_PASSWORD="rootパスワード"
+  MYSQL_HOST="localhost"
+
+  LOG='/var/log/mysql_fullbackup.log'
+  MNT="$SCRIPT_HOME/mnt_for_fullbackup"
+  BACKUP_TARGET="$MNT"
+
+  # スナップショットのファイルをコピーしている間にオリジナルのファイル変更をどれだけ許容するかを設定します
+  # 短時間でファイルコピーが完了するようであればこの値は小さくしておく方がよいです
+  SNAPSHOT_SIZE='200M'
+  # バックアップ元となるLVM名を設定します
+  # e.g. /dev/VolGroup00/mysql
+  SNAPSHOT_FROM='/dev/ubuntu12/mysql'
+  SNAPSHOT_NAME="fullbackup-snap"
+  SNAPSHOT_TO="/dev/ubuntu12/$SNAPSHOT_NAME"
+
+  # バックアップファイルの出力先
+  OUTPUT_BACKUP_PATH="path/to/backup"
+fi

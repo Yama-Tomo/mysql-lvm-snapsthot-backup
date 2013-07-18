@@ -1,0 +1,22 @@
+#!/bin/bash
+
+. `cd $(dirname $0); pwd`/../libs/commonrc
+
+SNAPSHOT_SIZE=$1
+SNAPSHOT_NAME=$2
+SNAPSHOT_FROM=$3
+
+# spell :)
+# http://freebsd.g.hatena.ne.jp/py4s-tnk/20080320/1205966880
+sync
+sync
+sync
+
+output=$(lvcreate --snapshot --size=$SNAPSHOT_SIZE --name=$SNAPSHOT_NAME $SNAPSHOT_FROM 2>&1)
+result=$?
+
+if [ $result -ne 0 ]; then
+  echo $output 1>&2
+fi
+
+exit $result

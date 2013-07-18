@@ -1,0 +1,24 @@
+#!/bin/bash
+
+export LANG=C
+
+PATH=/bin:/usr/bin:/sbin:/usr/sbin:/usr/local/bin
+export PATH
+
+SCRIPT_HOME=`cd $(dirname $0); pwd`/../
+
+if [ -f $SCRIPT_HOME/libs/localrc ]; then
+  . $SCRIPT_HOME/libs/localrc
+else
+  echo "ERROR!! no such file [localrc]" 1>&2 
+  exit 99
+fi
+
+function logger() {
+  local level=$1
+  local message=$2
+  local log_path=$3
+
+  echo "$(/bin/date +'%b %d %k:%M:%S') $(/bin/hostname) [$level] : $message " >> $log_path
+}
+
